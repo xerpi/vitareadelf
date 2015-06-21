@@ -116,9 +116,6 @@ void sce_print_module_export(const sce_module_exports *modexp)
 	modexp->module_name, modexp->nid_table, modexp->entry_table);
 }
 
-
-
-
 void sce_print_module_import(const sce_module_imports *modimp)
 {
 	printf(
