@@ -43,7 +43,7 @@ typedef struct __attribute__((packed)) {
 	uint32_t    entry_table;
 } sce_module_exports;
 
-typedef struct {
+typedef struct __attribute__((packed)) {
 	uint16_t     size;
 	uint16_t     version;
 	uint16_t     flags;
@@ -52,14 +52,14 @@ typedef struct {
 	uint16_t     num_syms_unk;
 	uint32_t     reserved1;
 	uint32_t     module_nid;
-	char         *module_name;
+	uint32_t     module_name;
 	uint32_t     reserved2;
-	uint32_t     *func_nid_table;
-	void         **func_entry_table;
-	uint32_t     *var_nid_table;
-	void         **var_entry_table;
-	uint32_t     *unk_nid_table;
-	void         **unk_entry_table;
+	uint32_t     func_nid_table;
+	uint32_t     func_entry_table;
+	uint32_t     var_nid_table;
+	uint32_t     var_entry_table;
+	uint32_t     unk_nid_table;
+	uint32_t     unk_entry_table;
 } sce_module_imports;
 
 
@@ -80,9 +80,15 @@ int sce_load_module_exports(FILE *fp, const Elf32_Ehdr *ehdr,
 	const Elf32_Phdr *modexp_phdr, const sce_module_info *modinfo,
 	sce_module_exports **modexps);
 
+/* Returns the number of imports */
+int sce_load_module_imports(FILE *fp, const Elf32_Ehdr *ehdr,
+	const Elf32_Phdr *modimp_phdr, const sce_module_info *modinfo,
+	sce_module_imports **modimps);
+
 
 void sce_print_module_info(const sce_module_info *modinfo);
-void sce_print_module_exports(const sce_module_exports *modexp);
+void sce_print_module_export(const sce_module_exports *modexp);
+void sce_print_module_import(const sce_module_imports *modimp);
 
 
 #endif

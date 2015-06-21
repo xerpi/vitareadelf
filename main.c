@@ -65,9 +65,22 @@ int main(int argc, char *argv[])
 
 	for (i = 0; i < n_exports; i++) {
 		printf("sce_module_exports %d:\n", i);
-		sce_print_module_exports(&modexps[i]);
+		sce_print_module_export(&modexps[i]);
 	}
 
+	sce_module_imports *modimps;
+	int n_imports;
+	n_imports = sce_load_module_imports(fp, &ehdr, &phdr[modinfo_seg], &modinfo, &modimps);
+
+	printf("Read %d imports:\n\n", n_imports);
+
+	for (i = 0; i < n_imports; i++) {
+		printf("sce_module_imports %d:\n", i);
+		sce_print_module_import(&modimps[i]);
+	}
+
+
+	free(modimps);
 	free(modexps);
 	elf_free_shdr(&shdr);
 	elf_free_phdr(&phdr);

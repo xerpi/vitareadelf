@@ -39,6 +39,31 @@ int sce_load_module_exports(FILE *fp, const Elf32_Ehdr *ehdr, const Elf32_Phdr *
 	return total/sizeof(sce_module_exports);
 }
 
+
+int sce_load_module_imports(FILE *fp, const Elf32_Ehdr *ehdr, const Elf32_Phdr *modimp_phdr, const sce_module_info *modinfo, sce_module_imports **modimps)
+{
+	uint32_t imports_base = modimp_phdr->p_offset + modinfo->import_top;
+	uint32_t imports_end = modimp_phdr->p_offset + modinfo->import_end;
+
+	printf("Imports base: 0x%X\nImports end: 0x%X\n\n", imports_base, imports_end);
+
+	size_t total = imports_end - imports_base;
+
+	*modimps = malloc(total);
+
+	fseek(fp, imports_base, SEEK_SET);
+
+	size_t n = fread(*modimps, 1, total, fp);
+
+	if (n != total) {
+		fprintf(stderr, "Could not read module imports\n");
+		free(*modimps);
+		return -1;
+	}
+
+	return total/sizeof(sce_module_imports);
+}
+
 void sce_print_module_info(const sce_module_info *modinfo)
 {
 	printf(
@@ -72,7 +97,7 @@ void sce_print_module_info(const sce_module_info *modinfo)
 }
 
 
-void sce_print_module_exports(const sce_module_exports *modexp)
+void sce_print_module_export(const sce_module_exports *modexp)
 {
 	printf(
 		"  size                                 0x%X\n"
@@ -82,11 +107,42 @@ void sce_print_module_exports(const sce_module_exports *modexp)
 		"  num_syms_vars                        0x%X\n"
 		"  num_syms_unk                         0x%X\n"
 		"  module_nid                           0x%X\n"
-		"  module_name                          0x%X\n"
+		"  module_name_off                      0x%X\n"
 		"  nid_table                            0x%X\n"
 		"  entry_table                          0x%X\n\n",
 	modexp->size, modexp->version, modexp->flags,
 	modexp->num_syms_funcs, modexp->num_syms_vars,
 	modexp->num_syms_unk, modexp->module_nid,
 	modexp->module_name, modexp->nid_table, modexp->entry_table);
+}
+
+
+
+
+void sce_print_module_import(const sce_module_imports *modimp)
+{
+	printf(
+		"  size                                 0x%X\n"
+		"  version                              0x%X\n"
+		"  flags                                0x%X\n"
+		"  num_syms_funcs                       0x%X\n"
+		"  num_syms_vars                        0x%X\n"
+		"  num_syms_unk                         0x%X\n"
+		"  reserved1                            0x%X\n"
+		"  module_nid                           0x%X\n"
+		"  module_name_off                      0x%X\n"
+		"  reserved2                            0x%X\n"
+		"  func_nid_table                       0x%X\n"
+		"  func_entry_table                     0x%X\n"
+		"  var_nid_table                        0x%X\n"
+		"  var_entry_table                      0x%X\n"
+		"  unk_nid_table                        0x%X\n"
+		"  unk_entry_table                      0x%X\n\n",
+	modimp->size, modimp->version, modimp->flags,
+	modimp->num_syms_funcs, modimp->num_syms_vars,
+	modimp->num_syms_unk, modimp->reserved1, modimp->module_nid,
+	modimp->module_name, modimp->reserved2, modimp->func_nid_table,
+	modimp->func_entry_table, modimp->var_nid_table,
+	modimp->var_entry_table, modimp->unk_nid_table,
+	modimp->unk_entry_table);
 }
