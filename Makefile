@@ -3,7 +3,7 @@
 #
 
 TARGET = vitareadelf
-OBJS = main.o elf.o
+OBJS = main.o elf.o vita_module.o
 
 CFLAGS = -Wall
 LIBS =

@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "elf.h"
+#include "vita_module.h"
 
 static void usage();
 
@@ -36,11 +37,10 @@ int main(int argc, char *argv[])
 		goto exit_free_phdr;
 	}
 
-	//elf_print_ehdr(&ehdr);
+	elf_print_ehdr(&ehdr);
+
 	unsigned int modinfo_seg = ehdr.e_entry >> 30;
 	unsigned int modinfo_off = ehdr.e_entry & 0x3FFFFFFF;
-	printf("Segment containing sce_module_info: %d, offset: 0x%X\n",
-		modinfo_seg, modinfo_off);
 
 	int i;
 	for (i = 0; i < ehdr.e_phnum; i++) {
@@ -48,7 +48,14 @@ int main(int argc, char *argv[])
 		elf_print_phdr(&phdr[i]);
 	}
 
+	printf("Segment containing sce_module_info: %d, offset: 0x%X\n\n",
+		modinfo_seg, modinfo_off);
 
+	sce_module_info modinfo;
+	fseek(fp, phdr[modinfo_seg].p_offset + modinfo_off, SEEK_SET);
+	fread(&modinfo, 1, sizeof(modinfo), fp);
+
+	sce_print_module_info(&modinfo);
 
 	elf_free_shdr(&shdr);
 	elf_free_phdr(&phdr);

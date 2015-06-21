@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2015 Sergi Granell (xerpi)
+ */
+
 /* NOTE: This file has been modified to satisfy the SONY PSVita
    (PlayStation Vita) operation system's design.
  */

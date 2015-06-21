@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2015 Sergi Granell (xerpi)
+ */
+
 #include "elf.h"
 #include <stdlib.h>
 
@@ -155,23 +159,3 @@ void elf_print_phdr(const Elf32_Phdr *phdr)
 	phdr->p_paddr, phdr->p_filesz, phdr->p_memsz,
 	phdr->p_flags, phdr->p_align);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
