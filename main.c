@@ -12,6 +12,9 @@ static void usage();
 
 int main(int argc, char *argv[])
 {
+	uint32_t i;
+	uint32_t cnt;
+
 	if (argc < 2) {
 		usage();
 		goto exit_error;
@@ -39,10 +42,9 @@ int main(int argc, char *argv[])
 
 	elf_print_ehdr(&ehdr);
 
-	unsigned int modinfo_seg = ehdr.e_entry >> 30;
-	unsigned int modinfo_off = ehdr.e_entry & 0x3FFFFFFF;
+	uint32_t modinfo_seg = ehdr.e_entry >> 30;
+	uint32_t modinfo_off = ehdr.e_entry & 0x3FFFFFFF;
 
-	int i;
 	for (i = 0; i < ehdr.e_phnum; i++) {
 		printf("Program Header 0x%X:\n", i);
 		elf_print_phdr(&phdr[i]);
@@ -56,6 +58,19 @@ int main(int argc, char *argv[])
 	fread(&modinfo, 1, sizeof(modinfo), fp);
 
 	sce_print_module_info(&modinfo);
+
+	uint32_t exports_base = phdr[modinfo_seg].p_offset + modinfo.export_top;
+	uint32_t exports_end = phdr[modinfo_seg].p_offset + modinfo.export_end;
+
+	printf("Exports base: 0x%X\nExports end: 0x%X\n\n", exports_base, exports_end);
+
+	for (i = exports_base, cnt = 0; i < exports_end; i += sizeof(sce_module_exports), cnt++) {
+		sce_module_exports modexp;
+		fseek(fp, i, SEEK_SET);
+		fread(&modexp, 1, sizeof(modexp), fp);
+		printf("sce_module_exports 0x%X:\n", cnt);
+		sce_print_module_exports(&modexp);
+	}
 
 	elf_free_shdr(&shdr);
 	elf_free_phdr(&phdr);

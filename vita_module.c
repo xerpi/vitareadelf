@@ -36,3 +36,23 @@ void sce_print_module_info(const sce_module_info *modinfo)
 	modinfo->module_stop, modinfo->exidx_top, modinfo->exidx_end,
 	modinfo->extab_top, modinfo->extab_end);
 }
+
+
+void sce_print_module_exports(const sce_module_exports *modexp)
+{
+	printf(
+		"  size                                 0x%X\n"
+		"  version                              0x%X\n"
+		"  flags                                0x%X\n"
+		"  num_syms_funcs                       0x%X\n"
+		"  num_syms_vars                        0x%X\n"
+		"  num_syms_unk                         0x%X\n"
+		"  module_nid                           0x%X\n"
+		"  module_name                          0x%X\n"
+		"  nid_table                            0x%X\n"
+		"  entry_table                          0x%X\n\n",
+	modexp->size, modexp->version, modexp->flags,
+	modexp->num_syms_funcs, modexp->num_syms_vars,
+	modexp->num_syms_unk, modexp->module_nid,
+	modexp->module_name, modexp->nid_table, modexp->entry_table);
+}

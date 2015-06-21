@@ -29,7 +29,7 @@ typedef struct __attribute__((packed)) {
 	uint32_t     extab_end;
 } sce_module_info;
 
-typedef struct {
+typedef struct __attribute__((packed)) {
 	uint16_t    size;
 	uint16_t    version;
 	uint16_t    flags;
@@ -37,9 +37,9 @@ typedef struct {
 	uint32_t    num_syms_vars;
 	uint32_t    num_syms_unk;
 	uint32_t    module_nid;
-	char        *module_name;
-	uint32_t    *nid_table;
-	void        **entry_table;
+	uint32_t    module_name;
+	uint32_t    nid_table;
+	uint32_t    entry_table;
 } sce_module_exports;
 
 typedef struct {
@@ -70,5 +70,7 @@ typedef struct {
 #define EXPORT_MODULE_INFO_VAR_NID   0x6C2224BA
 
 void sce_print_module_info(const sce_module_info *modinfo);
+void sce_print_module_exports(const sce_module_exports *modexp);
+
 
 #endif
