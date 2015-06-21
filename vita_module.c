@@ -4,6 +4,40 @@
 
 #include "vita_module.h"
 #include <stdio.h>
+#include <stdlib.h>
+
+void sce_read_module_info(FILE *fp, const Elf32_Ehdr *ehdr, const Elf32_Phdr *phdrs, sce_module_info *modinfo, uint32_t *modinfo_seg, uint32_t *modinfo_off)
+{
+	*modinfo_seg = ehdr->e_entry >> 30;
+	*modinfo_off = ehdr->e_entry & 0x3FFFFFFF;
+
+	fseek(fp, phdrs[*modinfo_seg].p_offset + *modinfo_off, SEEK_SET);
+	fread(modinfo, 1, sizeof(*modinfo), fp);
+}
+
+int sce_load_module_exports(FILE *fp, const Elf32_Ehdr *ehdr, const Elf32_Phdr *modexp_phdr, const sce_module_info *modinfo, sce_module_exports **modexps)
+{
+	uint32_t exports_base = modexp_phdr->p_offset + modinfo->export_top;
+	uint32_t exports_end = modexp_phdr->p_offset + modinfo->export_end;
+
+	printf("Exports base: 0x%X\nExports end: 0x%X\n\n", exports_base, exports_end);
+
+	size_t total = exports_end - exports_base;
+
+	*modexps = malloc(total);
+
+	fseek(fp, exports_base, SEEK_SET);
+
+	size_t n = fread(*modexps, 1, total, fp);
+
+	if (n != total) {
+		fprintf(stderr, "Could not read module exports\n");
+		free(*modexps);
+		return -1;
+	}
+
+	return total/sizeof(sce_module_exports);
+}
 
 void sce_print_module_info(const sce_module_info *modinfo)
 {

@@ -13,7 +13,6 @@ static void usage();
 int main(int argc, char *argv[])
 {
 	uint32_t i;
-	uint32_t cnt;
 
 	if (argc < 2) {
 		usage();
@@ -42,36 +41,34 @@ int main(int argc, char *argv[])
 
 	elf_print_ehdr(&ehdr);
 
-	uint32_t modinfo_seg = ehdr.e_entry >> 30;
-	uint32_t modinfo_off = ehdr.e_entry & 0x3FFFFFFF;
-
 	for (i = 0; i < ehdr.e_phnum; i++) {
-		printf("Program Header 0x%X:\n", i);
+		printf("Program Header %d:\n", i);
 		elf_print_phdr(&phdr[i]);
 	}
+
+	uint32_t modinfo_seg;
+	uint32_t modinfo_off;
+	sce_module_info modinfo;
+
+	sce_read_module_info(fp, &ehdr, phdr, &modinfo, &modinfo_seg, &modinfo_off);
 
 	printf("Segment containing sce_module_info: %d, offset: 0x%X\n\n",
 		modinfo_seg, modinfo_off);
 
-	sce_module_info modinfo;
-	fseek(fp, phdr[modinfo_seg].p_offset + modinfo_off, SEEK_SET);
-	fread(&modinfo, 1, sizeof(modinfo), fp);
-
 	sce_print_module_info(&modinfo);
 
-	uint32_t exports_base = phdr[modinfo_seg].p_offset + modinfo.export_top;
-	uint32_t exports_end = phdr[modinfo_seg].p_offset + modinfo.export_end;
+	sce_module_exports *modexps;
+	int n_exports;
+	n_exports = sce_load_module_exports(fp, &ehdr, &phdr[modinfo_seg], &modinfo, &modexps);
 
-	printf("Exports base: 0x%X\nExports end: 0x%X\n\n", exports_base, exports_end);
+	printf("Read %d exports:\n\n", n_exports);
 
-	for (i = exports_base, cnt = 0; i < exports_end; i += sizeof(sce_module_exports), cnt++) {
-		sce_module_exports modexp;
-		fseek(fp, i, SEEK_SET);
-		fread(&modexp, 1, sizeof(modexp), fp);
-		printf("sce_module_exports 0x%X:\n", cnt);
-		sce_print_module_exports(&modexp);
+	for (i = 0; i < n_exports; i++) {
+		printf("sce_module_exports %d:\n", i);
+		sce_print_module_exports(&modexps[i]);
 	}
 
+	free(modexps);
 	elf_free_shdr(&shdr);
 	elf_free_phdr(&phdr);
 	fclose(fp);

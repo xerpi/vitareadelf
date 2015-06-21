@@ -6,6 +6,7 @@
 #define VITA_MODULE_H
 
 #include <stdint.h>
+#include "elf.h"
 
 typedef struct __attribute__((packed)) {
 	uint16_t     attributes;
@@ -68,6 +69,17 @@ typedef struct {
 #define EXPORT_MODULE_EXIT_FUNC_NID  0x913482A9
 #define EXPORT_MODULE_START_FUNC_NID 0x935CD196
 #define EXPORT_MODULE_INFO_VAR_NID   0x6C2224BA
+
+void sce_read_module_info(FILE *fp, const Elf32_Ehdr *ehdr,
+	const Elf32_Phdr *phdrs, sce_module_info *modinfo,
+	uint32_t *modinfo_seg, uint32_t *modinfo_off);
+
+
+/* Returns the number of exports */
+int sce_load_module_exports(FILE *fp, const Elf32_Ehdr *ehdr,
+	const Elf32_Phdr *modexp_phdr, const sce_module_info *modinfo,
+	sce_module_exports **modexps);
+
 
 void sce_print_module_info(const sce_module_info *modinfo);
 void sce_print_module_exports(const sce_module_exports *modexp);
