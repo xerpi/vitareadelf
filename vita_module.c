@@ -162,6 +162,12 @@ int sce_load_module_import_unk_nids(FILE *fp, const Elf32_Phdr *modimp_phdr, con
 	return num_nids;
 }
 
+void sce_read_module_name(FILE *fp, uint32_t module_name_addr, const Elf32_Phdr *mod_phdr, char *modname, int modname_len)
+{
+	uint32_t nameoff = module_name_addr - mod_phdr->p_vaddr + mod_phdr->p_offset;
+	fseek(fp, nameoff, SEEK_SET);
+	fgets(modname, modname_len, fp);
+}
 
 void sce_print_module_info(const sce_module_info *modinfo)
 {

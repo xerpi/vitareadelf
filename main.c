@@ -13,6 +13,7 @@ static void usage();
 int main(int argc, char *argv[])
 {
 	uint32_t i;
+	char modname[256];
 
 	if (argc < 2) {
 		usage();
@@ -64,11 +65,8 @@ int main(int argc, char *argv[])
 	printf("Read %d exports:\n\n", n_exports);
 
 	for (i = 0; i < n_exports; i++) {
-		char modname[128];
-		uint32_t nameoff = modexps[i].module_name - phdr[modinfo_seg].p_vaddr + phdr[modinfo_seg].p_offset;
-		fseek(fp, nameoff, SEEK_SET);
-		fgets(modname, 128, fp);
 
+		sce_read_module_name(fp, modexps[i].module_name, &phdr[modinfo_seg], modname, sizeof(modname));
 		printf("sce_module_exports %d (%s)\n", i, modname);
 		sce_print_module_export(&modexps[i]);
 
@@ -95,11 +93,7 @@ int main(int argc, char *argv[])
 	printf("Read %d imports:\n\n", n_imports);
 
 	for (i = 0; i < n_imports; i++) {
-		char modname[128];
-		uint32_t nameoff = modimps[i].module_name - phdr[modinfo_seg].p_vaddr + phdr[modinfo_seg].p_offset;
-		fseek(fp, nameoff, SEEK_SET);
-		fgets(modname, 128, fp);
-
+		sce_read_module_name(fp, modimps[i].module_name, &phdr[modinfo_seg], modname, sizeof(modname));
 		printf("sce_module_imports %d (%s)\n", i, modname);
 		sce_print_module_import(&modimps[i]);
 

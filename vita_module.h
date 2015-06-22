@@ -101,6 +101,8 @@ int sce_load_module_import_var_nids(FILE *fp, const Elf32_Phdr *modimp_phdr,
 int sce_load_module_import_unk_nids(FILE *fp, const Elf32_Phdr *modimp_phdr,
 	const sce_module_imports *modimp, sce_nid **nids);
 
+void sce_read_module_name(FILE *fp, uint32_t module_name_addr,
+	const Elf32_Phdr *mod_phdr, char *modname, int modname_len);
 
 void sce_print_module_info(const sce_module_info *modinfo);
 void sce_print_module_export(const sce_module_exports *modexp);
