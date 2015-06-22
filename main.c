@@ -21,22 +21,26 @@ int main(int argc, char *argv[])
 	}
 
 	FILE *fp = fopen(argv[1], "rb");
+	if (fp == NULL) {
+		fprintf(stderr, "ERROR loading %s\n", argv[1]);
+		goto exit_error;
+	}
 
 	Elf32_Ehdr ehdr;
 	if (!elf_read_ehdr(fp, &ehdr)) {
-		fprintf(stderr, "ERROR: loading ELF\n");
+		fprintf(stderr, "ERROR loading ELF\n");
 		goto exit_close;
 	}
 
 	Elf32_Phdr *phdr;
 	if (!elf_load_phdr(fp, &ehdr, &phdr)) {
-		fprintf(stderr, "ERROR: loading ELF Program Header\n");
+		fprintf(stderr, "ERROR loading ELF Program Header\n");
 		goto exit_close;
 	}
 
 	Elf32_Shdr *shdr;
 	if (!elf_load_shdr(fp, &ehdr, &shdr)) {
-		fprintf(stderr, "ERROR: loading ELF Section Header\n");
+		fprintf(stderr, "ERROR loading ELF Section Header\n");
 		goto exit_free_phdr;
 	}
 
