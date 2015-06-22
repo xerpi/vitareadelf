@@ -8,6 +8,8 @@
 #include <stdint.h>
 #include "elf.h"
 
+typedef uint32_t sce_nid;
+
 typedef struct __attribute__((packed)) {
 	uint16_t     attributes;
 	uint16_t     version;
@@ -76,19 +78,44 @@ void sce_read_module_info(FILE *fp, const Elf32_Ehdr *ehdr,
 
 
 /* Returns the number of exports */
-int sce_load_module_exports(FILE *fp, const Elf32_Ehdr *ehdr,
-	const Elf32_Phdr *modexp_phdr, const sce_module_info *modinfo,
-	sce_module_exports **modexps);
+int sce_load_module_exports(FILE *fp, const Elf32_Phdr *modexp_phdr,
+	const sce_module_info *modinfo, sce_module_exports **modexps);
 
 /* Returns the number of imports */
-int sce_load_module_imports(FILE *fp, const Elf32_Ehdr *ehdr,
-	const Elf32_Phdr *modimp_phdr, const sce_module_info *modinfo,
-	sce_module_imports **modimps);
+int sce_load_module_imports(FILE *fp, const Elf32_Phdr *modimp_phdr,
+	const sce_module_info *modinfo, sce_module_imports **modimps);
+
+/* Returns the total number of NIDS (func + var + unk) */
+int sce_load_module_export_nids(FILE *fp, const Elf32_Phdr *modexp_phdr,
+	const sce_module_exports *modexp, sce_nid **nids);
+
+/* Returns the number of Function NIDS */
+int sce_load_module_import_func_nids(FILE *fp, const Elf32_Phdr *modimp_phdr,
+	const sce_module_imports *modimp, sce_nid **nids);
+
+/* Returns the number of Variable NIDS */
+int sce_load_module_import_var_nids(FILE *fp, const Elf32_Phdr *modimp_phdr,
+	const sce_module_imports *modimp, sce_nid **nids);
+
+/* Returns the number of Unkown NIDS */
+int sce_load_module_import_unk_nids(FILE *fp, const Elf32_Phdr *modimp_phdr,
+	const sce_module_imports *modimp, sce_nid **nids);
 
 
 void sce_print_module_info(const sce_module_info *modinfo);
 void sce_print_module_export(const sce_module_exports *modexp);
 void sce_print_module_import(const sce_module_imports *modimp);
+void sce_print_module_export_nids(const sce_nid *nids,
+	uint16_t num_syms_funcs,
+	uint16_t num_syms_vars,
+	uint16_t num_syms_unk);
+void sce_print_module_import_nids(
+	const sce_nid *func_nids,
+	const sce_nid *var_nids,
+	const sce_nid *unk_nids,
+	uint16_t num_syms_funcs,
+	uint16_t num_syms_vars,
+	uint16_t num_syms_unk);
 
 
 #endif

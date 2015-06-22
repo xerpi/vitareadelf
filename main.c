@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
 
 	sce_module_exports *modexps;
 	int n_exports;
-	n_exports = sce_load_module_exports(fp, &ehdr, &phdr[modinfo_seg], &modinfo, &modexps);
+	n_exports = sce_load_module_exports(fp, &phdr[modinfo_seg], &modinfo, &modexps);
 
 	printf("Read %d exports:\n\n", n_exports);
 
@@ -71,11 +71,26 @@ int main(int argc, char *argv[])
 
 		printf("sce_module_exports %d (%s)\n", i, modname);
 		sce_print_module_export(&modexps[i]);
+
+		/* Read exported NIDS */
+		sce_nid *nids = NULL;
+		int n_nids = 0; // Function + data + unk nids
+
+		n_nids = sce_load_module_export_nids(fp, &phdr[modinfo_seg], &modexps[i], &nids);
+		printf("    Number of NIDS: %d\n", n_nids);
+
+		/* Print Function NIDS */
+		sce_print_module_export_nids(nids,
+			modexps[i].num_syms_funcs,
+			modexps[i].num_syms_vars,
+			modexps[i].num_syms_unk);
+
+		free(nids);
 	}
 
 	sce_module_imports *modimps;
 	int n_imports;
-	n_imports = sce_load_module_imports(fp, &ehdr, &phdr[modinfo_seg], &modinfo, &modimps);
+	n_imports = sce_load_module_imports(fp, &phdr[modinfo_seg], &modinfo, &modimps);
 
 	printf("Read %d imports:\n\n", n_imports);
 
@@ -87,6 +102,29 @@ int main(int argc, char *argv[])
 
 		printf("sce_module_imports %d (%s)\n", i, modname);
 		sce_print_module_import(&modimps[i]);
+
+		/* Read imported NIDS */
+		sce_nid *func_nids = NULL;
+		sce_nid *var_nids = NULL;
+		sce_nid *unk_nids = NULL;
+		int n_nids = 0; // Function + data + unk nids
+
+		n_nids += sce_load_module_import_func_nids(fp, &phdr[modinfo_seg], &modimps[i], &func_nids);
+		n_nids += sce_load_module_import_var_nids(fp, &phdr[modinfo_seg], &modimps[i], &var_nids);
+		n_nids += sce_load_module_import_unk_nids(fp, &phdr[modinfo_seg], &modimps[i], &unk_nids);
+
+		printf("    Number of NIDS: %d\n", n_nids);
+
+		/* Print Function NIDS */
+		sce_print_module_import_nids(
+			func_nids, var_nids, unk_nids,
+			modimps[i].num_syms_funcs,
+			modimps[i].num_syms_vars,
+			modimps[i].num_syms_unk);
+
+		free(func_nids);
+		free(var_nids);
+		free(unk_nids);
 	}
 
 

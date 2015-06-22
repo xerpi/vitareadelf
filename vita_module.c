@@ -15,7 +15,7 @@ void sce_read_module_info(FILE *fp, const Elf32_Ehdr *ehdr, const Elf32_Phdr *ph
 	fread(modinfo, 1, sizeof(*modinfo), fp);
 }
 
-int sce_load_module_exports(FILE *fp, const Elf32_Ehdr *ehdr, const Elf32_Phdr *modexp_phdr, const sce_module_info *modinfo, sce_module_exports **modexps)
+int sce_load_module_exports(FILE *fp, const Elf32_Phdr *modexp_phdr, const sce_module_info *modinfo, sce_module_exports **modexps)
 {
 	uint32_t exports_base = modexp_phdr->p_offset + modinfo->export_top;
 	uint32_t exports_end = modexp_phdr->p_offset + modinfo->export_end;
@@ -33,6 +33,7 @@ int sce_load_module_exports(FILE *fp, const Elf32_Ehdr *ehdr, const Elf32_Phdr *
 	if (n != total) {
 		fprintf(stderr, "Could not read module exports\n");
 		free(*modexps);
+		*modexps = NULL;
 		return -1;
 	}
 
@@ -40,7 +41,7 @@ int sce_load_module_exports(FILE *fp, const Elf32_Ehdr *ehdr, const Elf32_Phdr *
 }
 
 
-int sce_load_module_imports(FILE *fp, const Elf32_Ehdr *ehdr, const Elf32_Phdr *modimp_phdr, const sce_module_info *modinfo, sce_module_imports **modimps)
+int sce_load_module_imports(FILE *fp, const Elf32_Phdr *modimp_phdr, const sce_module_info *modinfo, sce_module_imports **modimps)
 {
 	uint32_t imports_base = modimp_phdr->p_offset + modinfo->import_top;
 	uint32_t imports_end = modimp_phdr->p_offset + modinfo->import_end;
@@ -58,11 +59,109 @@ int sce_load_module_imports(FILE *fp, const Elf32_Ehdr *ehdr, const Elf32_Phdr *
 	if (n != total) {
 		fprintf(stderr, "Could not read module imports\n");
 		free(*modimps);
+		*modimps = NULL;
 		return -1;
 	}
 
 	return total/sizeof(sce_module_imports);
 }
+
+int sce_load_module_export_nids(FILE *fp, const Elf32_Phdr *modexp_phdr, const sce_module_exports *modexp, sce_nid **nids)
+{
+	uint32_t nid_table_off = modexp->nid_table - modexp_phdr->p_vaddr + modexp_phdr->p_offset;
+
+	uint32_t num_nids = modexp->num_syms_funcs + modexp->num_syms_vars + modexp->num_syms_unk;
+
+	size_t nid_table_size = 4 * num_nids;
+
+	*nids = malloc(nid_table_size);
+
+	fseek(fp, nid_table_off, SEEK_SET);
+
+	size_t n = fread(*nids, 1, nid_table_size, fp);
+
+	if (n != nid_table_size) {
+		fprintf(stderr, "Could not read module export NIDS\n");
+		free(*nids);
+		*nids = NULL;
+		return -1;
+	}
+
+	return num_nids;
+}
+
+int sce_load_module_import_func_nids(FILE *fp, const Elf32_Phdr *modimp_phdr, const sce_module_imports *modimp, sce_nid **nids)
+{
+	uint32_t func_nid_table_off = modimp->func_nid_table - modimp_phdr->p_vaddr + modimp_phdr->p_offset;
+
+	uint32_t num_nids = modimp->num_syms_funcs;
+
+	size_t func_nid_table_size = 4 * num_nids;
+
+	*nids = malloc(func_nid_table_size);
+
+	fseek(fp, func_nid_table_off, SEEK_SET);
+
+	size_t n = fread(*nids, 1, func_nid_table_size, fp);
+
+	if (n != func_nid_table_size) {
+		fprintf(stderr, "Could not read module import Function NIDS\n");
+		free(*nids);
+		*nids = NULL;
+		return -1;
+	}
+
+	return num_nids;
+}
+
+int sce_load_module_import_var_nids(FILE *fp, const Elf32_Phdr *modimp_phdr, const sce_module_imports *modimp, sce_nid **nids)
+{
+	uint32_t var_nid_table_off = modimp->var_nid_table - modimp_phdr->p_vaddr + modimp_phdr->p_offset;
+
+	uint32_t num_nids = modimp->num_syms_vars;
+
+	size_t var_nid_table_size = 4 * num_nids;
+
+	*nids = malloc(var_nid_table_size);
+
+	fseek(fp, var_nid_table_off, SEEK_SET);
+
+	size_t n = fread(*nids, 1, var_nid_table_size, fp);
+
+	if (n != var_nid_table_size) {
+		fprintf(stderr, "Could not read module import Variable NIDS\n");
+		free(*nids);
+		*nids = NULL;
+		return -1;
+	}
+
+	return num_nids;
+}
+
+int sce_load_module_import_unk_nids(FILE *fp, const Elf32_Phdr *modimp_phdr, const sce_module_imports *modimp, sce_nid **nids)
+{
+	uint32_t unk_nid_table_off = modimp->unk_nid_table - modimp_phdr->p_vaddr + modimp_phdr->p_offset;
+
+	uint32_t num_nids = modimp->num_syms_unk;
+
+	size_t unk_nid_table_size = 4 * num_nids;
+
+	*nids = malloc(unk_nid_table_size);
+
+	fseek(fp, unk_nid_table_off, SEEK_SET);
+
+	size_t n = fread(*nids, 1, unk_nid_table_size, fp);
+
+	if (n != unk_nid_table_size) {
+		fprintf(stderr, "Could not read module import unkiable NIDS\n");
+		free(*nids);
+		*nids = NULL;
+		return -1;
+	}
+
+	return num_nids;
+}
+
 
 void sce_print_module_info(const sce_module_info *modinfo)
 {
@@ -142,4 +241,50 @@ void sce_print_module_import(const sce_module_imports *modimp)
 	modimp->func_entry_table, modimp->var_nid_table,
 	modimp->var_entry_table, modimp->unk_nid_table,
 	modimp->unk_entry_table);
+}
+
+void sce_print_module_export_nids(const sce_nid *nids, uint16_t num_syms_funcs, uint16_t num_syms_vars, uint16_t num_syms_unk)
+{
+	uint32_t j;
+	uint32_t idx = 0;
+
+	/* Print Function NIDS */
+	for (j = 0; j < num_syms_funcs; j++, idx++) {
+		printf("      Function NID %d: 0x%08X\n", j, nids[idx]);
+	}
+
+	/* Print Variable NIDS */
+	for (j = 0; j < num_syms_vars; j++, idx++) {
+		printf("      Variable NID %d: 0x%08X\n", j, nids[idx]);
+	}
+
+	/* Print Unknown NIDS */
+	for (j = 0; j < num_syms_unk; j++, idx++) {
+		printf("      Unknown NID %d: 0x%08X\n", j, nids[idx]);
+	}
+
+	printf("\n");
+}
+
+void sce_print_module_import_nids(const sce_nid *func_nids, const sce_nid *var_nids, const sce_nid *unk_nids,
+	uint16_t num_syms_funcs, uint16_t num_syms_vars, uint16_t num_syms_unk)
+{
+	uint32_t j;
+
+	/* Print Function NIDS */
+	for (j = 0; j < num_syms_funcs; j++) {
+		printf("      Function NID %d: 0x%08X\n", j, func_nids[j]);
+	}
+
+	/* Print Variable NIDS */
+	for (j = 0; j < num_syms_vars; j++) {
+		printf("      Variable NID %d: 0x%08X\n", j, var_nids[j]);
+	}
+
+	/* Print Unknown NIDS */
+	for (j = 0; j < num_syms_unk; j++) {
+		printf("      Unknown NID %d: 0x%08X\n", j, unk_nids[j]);
+	}
+
+	printf("\n");
 }
