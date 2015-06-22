@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
 
 	FILE *fp = fopen(argv[1], "rb");
 	if (fp == NULL) {
-		fprintf(stderr, "ERROR loading %s\n", argv[1]);
+		fprintf(stderr, "ERROR opening %s\n", argv[1]);
 		goto exit_error;
 	}
 
